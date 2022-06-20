@@ -1,0 +1,158 @@
+-----------------------------
+Custs.txt
+------------------------------
+create table customer_exam(
+cust_id bigint, firstname string,
+lastname string, age int, 
+profession string
+)
+row format delimited 
+fields terminated by ','
+stored as textfile ; 
+
+load data local inpath 'custs1.txt' overwrite into table customer_exam;
+
+Q1) Write a program to find the count of customers for each profession.
+==>
+select profession, count(cust_id) as total_cust from customer_exam group by profession;
+
+Accountant      199                                                                                                                                                     
+Actor   202                                                                                                                                                             
+Agricultural and food scientist 195                                                                                                                                     
+Architect       203                                                                                                                                                     
+Artist  175                                                                                                                                                             
+Athlete 196                                                                                                                                                             
+Automotive mechanic     193                                                                                                                                             
+Carpenter       181                                                                                                                                                     
+Chemist 209                                                                                                                                                             
+Childcare worker        207                                                                                                                                             
+Civil engineer  193                                                                                                                                                     
+Coach   201                                                                                                                                                             
+Computer hardware engineer      204                                                                                                                                     
+Computer software engineer      216                                                                                                                                     
+Computer support specialist     222                                                                                                                                     
+Dancer  185                                                                                                                                                             
+Designer        205                                                                                                                                                     
+Doctor  197                                                                                                                                                             
+Economist       189                                                                                                                                                     
+Electrical engineer     192                                                                                                                                             
+Electrician     194                                                                                                                                                     
+Engineering technician  204                                                                                                                                             
+Environmental scientist 176                                                                                                                                             
+Farmer  201                                                                                                                                                             
+Financial analyst       198                                                                                                                                             
+Firefighter     217                                                                                                                                                     
+Human resources assistant       212                                                                                                                                     
+Judge   196                                                                                                                                                             
+Lawyer  212                                                                                                                                                             
+Librarian       218                                                                                                                                                     
+Loan officer    221                                                                                                                                                     
+Musician        205                                                                                                                                                     
+Nurse   192                                                                                                                                                             
+Pharmacist      213                                                                                                                                                     
+Photographer    222                                                                                                                                                     
+Physicist       201                                                                                                                                                     
+Pilot   211                                                                                                                                                             
+Police officer  210                                                                                                                                                     
+Politician      228                                                                                                                                                     
+Psychologist    194                                                                                                                                                     
+Real estate agent       191                                                                                                                                             
+Recreation and fitness worker   210                                                                                                                                     
+Reporter        200                                                                                                                                                     
+Secretary       200                                                                                                                                                     
+Social Worker   1                                                                                                                                                       
+Social worker   212                                                                                                                                                     
+Statistician    196                                                                                                                                                     
+Teacher 204                                                                                                                                                             
+Therapist       187                                                                                                                                                     
+Veterinarian    208  
+
+-----------------------------
+txns.txt
+-----------------------------
+
+create table txn_exam(
+txn_id bigint, 
+txn_date string,
+cust_id bigint,
+amount bigint,
+category string,
+product string,
+city string,
+state string,
+spendby string
+)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+load data local inpath 'txns2.txt' overwrite into table txn_exam;
+
+Q2) Write a program to find the top 10 products sales wise
+==>
+select product , sum(amount) as total from txn_exam group by product order by total limit 10;
+
+Air Suits       19276                                                                                                                                                   
+Mechanical Puzzles      20279                                                                                                                                           
+Disc Golf       33766                                                                                                                                                   
+Surfing 34906                                                                                                                                                           
+Tetherball      35423                                                                                                                                                   
+Downhill Skiing 36680                                                                                                                                                   
+Cricket 36872                                                                                                                                                           
+Archery 36896                                                                                                                                                           
+Fishing 36963                                                                                                                                                           
+Exercise Bands  37489      
+
+Q3)
+
+create table txn_exam_partition(
+txn_id bigint, 
+txn_date string,
+cust_id bigint,
+amount bigint,
+product string,
+city string,
+state string,
+spendby string
+)
+PARTITIONED BY (category string)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+from txn_exam tx insert into table txn_exam_partition PARTITION(category) select tx.txn_id,tx.txn_date,tx.cust_id ,tx.amount , tx.product , tx.city ,tx.state ,
+tx.spendby , tx.category DISTRIBUTE By category;
+
+************************************************************************************************************************************************************
+---------------------------------
+Airlines.csv
+---------------------------------
+
+Q2) Identifying the highest revenue generation for which year
+==>
+airline_rdd=sc.textFile('/user/bigdatamind43827/exam/airlines.csv')
+rdd1=airline_rdd.map(lambda a: a.encode("ascii","ignore"))
+array_rdd=rdd1.map(lambda a : a.split(','))
+header=array_rdd.first()
+rdd2=array_rdd.filter(lambda a : a!= header)
+key_value=rdd2.map(lambda a : (a[0], float (a[2]) * int (a[3]) ) )
+add_total=key_value.reduceByKey(lambda a,b : a+b)
+sortbyval=add_total.sortBy(lambda a: -a[1])
+
+('2013', 66363208.71)
+
+Q1)What was the highest number of people travelled in which year?
+key_value2=rdd2.map(lambda a : (a[0], float(a[3]) ))
+add_total2=key_value2.reduceByKey(lambda a,b : a+b)
+sortbyval2=add_total2.sortBy(lambda a: -a[1])
+
+('2007', 176299.0)   
+
+
+
+Q3)) Identifying the highest revenue generation for which year and quarter (Common
+group)
+==>
+key_value2=rdd2.map(lambda a : ((a[0]+" "+a[1]), float(a[2])*int(a[3]) ))
+add_total2=key_value2.reduceByKey(lambda a,b : a+b)
+sortbyval2=add_total2.sortBy(lambda a: -a[1])
